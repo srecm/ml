@@ -1,0 +1,80 @@
+# text neural network
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
+from keras.optimizers import Adam
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+
+# Sample data (replace with your actual data)
+texts = ["This is the first document.", "This document is the second document.", "And this is the third one."]
+labels = [0, 1, 0]  # Sample labels corresponding to each text
+
+# Tokenize and pad text sequences
+max_words = 1000
+max_len = 50
+tokenizer = Tokenizer(num_words=max_words)
+tokenizer.fit_on_texts(texts)
+sequences = tokenizer.texts_to_sequences(texts)
+x = pad_sequences(sequences, maxlen=max_len)
+
+# Convert labels to one-hot encoded vectors
+num_classes = len(np.unique(labels))
+y = np.zeros((len(labels), num_classes))
+for i, label in enumerate(labels):
+    y[i, label] = 1
+
+# Split data into training and testing sets
+train_ratio = 0.8
+num_train = int(train_ratio * len(texts))
+x_train, y_train = x[:num_train], y[:num_train]
+x_test, y_test = x[num_train:], y[num_train:]
+
+# Define neural network architecture
+model = Sequential()
+model.add(Dense(64, input_shape=(max_len,), activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(num_classes, activation='softmax'))
+optimizer = Adam(lr=0.01)
+model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train model
+batch_size = 32
+num_epochs = 10
+history = model.fit(x_train, y_train, batch_size=batch_size, epochs=num_epochs,
+                    validation_data=(x_test, y_test))
+
+# Evaluate model
+loss, accuracy = model.evaluate(x_test, y_test, batch_size=batch_size)
+print('Test loss:', loss)
+print('Test accuracy:', accuracy)
+
+# Plot training and validation accuracy over epochs
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('Model Accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Train', 'Test'], loc='upper left')
+plt.show()
+
+# Predict classes for test data
+y_pred = model.predict(x_test)
+y_pred_classes = np.argmax(y_pred, axis=1)
+y_true_classes = np.argmax(y_test, axis=1)
+
+# Create confusion matrix
+conf_matrix = confusion_matrix(y_true_classes, y_pred_classes)
+
+# Plot confusion matrix
+plt.imshow(conf_matrix, cmap=plt.cm.Blues, interpolation='nearest')
+plt.title('Confusion Matrix')
+plt.colorbar()
+tick_marks = np.arange(num_classes)
+plt.xticks(tick_marks, range(num_classes))
+plt.yticks(tick_marks, range(num_classes))
+plt.xlabel('Predicted Class')
+plt.ylabel('True Class')
+plt.show()
