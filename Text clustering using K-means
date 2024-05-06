@@ -1,0 +1,32 @@
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+
+df = pd.read_csv("/gdrive/MyDrive/ML_LAB/movies_metadata.csv")
+documents = df['overview'].values.astype("U")
+
+vectorizer = TfidfVectorizer(stop_words='english')
+features = vectorizer.fit_transform(documents)
+
+k = 30
+model = KMeans(n_clusters=k, init='k-means++', max_iter=100, n_init=1)
+model.fit(features)
+
+df['cluster'] = model.labels_
+clusters = df.groupby('cluster')
+
+for cluster in clusters.groups:
+    with open('cluster'+str(cluster)+ '.csv', 'w') as f:
+        data = clusters.get_group(cluster)[['title','overview']]
+        f.write(data.to_csv(index_label='id'))
+        print("Cluster %d written to file." % cluster)
+
+print("\nCluster centroids: \n")
+order_centroids = model.cluster_centers_.argsort()[:, ::-1]
+terms = vectorizer.get_feature_names_out()
+
+for i in range(k):
+    print("Cluster %d:" % i)
+    for j in order_centroids[i, :10]:
+        print (' %s' % terms[j])
+    print(' __________')
