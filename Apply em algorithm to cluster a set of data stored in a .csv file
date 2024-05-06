@@ -1,0 +1,37 @@
+#em alogrithm
+from sklearn.datasets import load_iris
+from sklearn.mixture import GaussianMixture
+import sklearn.metrics as metrics
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load the Iris dataset
+iris = load_iris()
+
+# Extract features and labels from the dataset
+X = iris.data
+y = iris.target
+
+# Define colormap for plotting
+colormap = np.array(['red', 'lime', 'black'])
+
+# Plot the real data
+plt.figure(figsize=(14, 7))
+plt.subplot(1, 3, 1)
+plt.title('Real')
+plt.scatter(X[:, 2], X[:, 3], c=colormap[y])
+
+# Fit Gaussian Mixture Model (GMM) and plot the classification
+gmm = GaussianMixture(n_components=3, random_state=0).fit(X)
+y_cluster_gmm = gmm.predict(X)
+
+plt.subplot(1, 3, 3)
+plt.title('GMM Classification')
+plt.scatter(X[:, 2], X[:, 3], c=colormap[y_cluster_gmm])
+
+# Print accuracy and confusion matrix
+print('The accuracy score of GMM:', metrics.accuracy_score(y, y_cluster_gmm))
+print('The Confusion matrix of GMM:\n', metrics.confusion_matrix(y, y_cluster_gmm))
+
+# Show the plots
+plt.show()
