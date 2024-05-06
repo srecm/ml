@@ -1,0 +1,30 @@
+!pip install pymc3
+
+import numpy as np
+import pymc3 as pm
+from pymc3 import *
+import matplotlib.pyplot as plt
+np.random.seed(42)
+n_samples = 100
+n_genes = 500
+n_conditions = 2
+true_expression = np.random.normal(loc=0, scale=1, size=(n_samples, n_genes))
+condition_effects = np.array([-1, 1])
+true_condition = np.random.randint(0, 2, size=n_samples)
+observed_expression = true_expression + condition_effects[true_condition][:, np.newaxis]
+with pm.Model() as gene_model:
+  condition_effect = pm.Normal('condition_effect', mu=0, sd=1, shape=n_conditions)
+  gene_expression = pm.Normal('gene_expression', mu=condition_effect[true_condition[:, np.newaxis]], sd=1, shape=(n_samples, n_genes), observed=observed_expression)
+  trace = pm.sample(1000, tune=1000)
+pm.summary(trace)
+pm.traceplot(trace)
+plt.figure(figsize=(12, 6))
+plt.hist(trace['condition_effect'][:, 0], bins=30, density=True, alpha=0.5, color='red',
+label='Condition 0')
+plt.hist(trace['condition_effect'][:, 1], bins=30, density=True, alpha=0.5, color='blue',
+label='Condition 1')
+plt.xlabel('Condition Effect')
+plt.ylabel('Density')
+plt.title('Posterior Distribution of Condition Effects')
+plt.legend()
+plt.show()
