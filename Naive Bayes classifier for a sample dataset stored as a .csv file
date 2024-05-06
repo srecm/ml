@@ -1,0 +1,45 @@
+# naive bayes classifier
+from google.colab import files
+import numpy as np
+import pandas as pd
+from sklearn.naive_bayes import GaussianNB
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# Upload the CSV file
+uploaded = files.upload()
+
+# Load the dataset
+play_tennis = pd.read_csv("/gdrive/MyDrive/ML_LAB/PlayTennis.csv")
+print(play_tennis.head())
+
+# Encoding categorical variables
+number = LabelEncoder()
+play_tennis['Outlook'] = number.fit_transform(play_tennis['Outlook'])
+play_tennis['Temperature'] = number.fit_transform(play_tennis['Temperature'])
+play_tennis['Humidity'] = number.fit_transform(play_tennis['Humidity'])
+play_tennis['Wind'] = number.fit_transform(play_tennis['Wind'])
+play_tennis['Play Tennis'] = number.fit_transform(play_tennis['Play Tennis'])
+
+# Splitting into features and target variable
+features = ["Outlook", "Temperature", "Humidity", "Wind"]
+target = "Play Tennis"
+
+# Train-test split
+features_train, features_test, target_train, target_test = train_test_split(play_tennis[features], play_tennis[target], test_size=0.33, random_state=54)
+
+# Model training
+model = GaussianNB()
+model.fit(features_train, target_train)
+
+# Predictions
+pred = model.predict(features_test)
+
+# Model evaluation
+accuracy = accuracy_score(target_test, pred)
+print( accuracy)
+print( pred)
+
+# Example prediction
+print(model.predict([[1, 2, 0, 1]]))
